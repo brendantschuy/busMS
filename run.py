@@ -1,20 +1,16 @@
-#/usr/bin/env python
 from flask import Flask, request, redirect
 from twilio.twiml.messaging_response import Message, MessagingResponse
 import requests as rq
 import time
 from keys import trimet_key
 
-#def __init__():
-#    importlib.import_module("keys")
-
 app = Flask(__name__)
-#strings = yaml.load(open("strings.txt", "r"))
 
+#API request
 def getResponse(id):
-    #return rq.get("https://developer.trimet.org/ws/V1/arrivals/locIDs/" + id + "/appID/" + strings["trimet_app_code"])
     return rq.get("https://developer.trimet.org/ws/V1/arrivals/locIDs/" + id + "/appID/" + trimet_key)
 
+#Format response
 def formatResponse(text):
     arrival = text.split("estimated=\"")[1]
     arrival = float(arrival.split("\"")[0])
@@ -22,20 +18,18 @@ def formatResponse(text):
     responseMsg = "Time until arrival: " + arrival + "minutes."
     return responseMsg
 
+#Driver
 def timeUntil(id):
     stop = getResponse(str(id)).text
     return formatResponse(stop)
 
+#Interacts w/ SMS:
 @app.route("/sms", methods=['GET', 'POST'])
 def trackerReply():
-    """Respond to incoming messages with a friendly SMS."""
-    # Start our response
-
     body = request.values.get('Body')
 
     resp = MessagingResponse()
 
-    # Add a message
     stopId = int(body)
     stopMsg = timeUntil(stopId)
     resp.message(stopMsg)
